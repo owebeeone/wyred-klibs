@@ -149,7 +149,38 @@ def ensure_pin(entry: dict, *, partial: bool) -> str:
             "%s: pinned tree mismatch (pin %s, got %s) -- the pinned SHA does "
             "not resolve to the recorded tree" % (entry["submodule"],
                                                   entry["pinned_tree"], got_tree))
+    ensure_checkout(sub, sha)
     return sub
+
+
+def ensure_checkout(sub: str, sha: str) -> None:
+    """Leave the submodule STATUS-CLEAN at the pin with a minimal worktree.
+
+    Without this, an init+fetch-only submodule has an unborn/blank index and
+    `git status` reports the entire pinned tree as deletions (noise the
+    parent surfaces as "(modified content)"). Sparse-checkout in cone mode
+    with no cone dirs keeps only the repo-root files in the worktree —
+    everything else is DECLARED absent (skip-worktree), not "deleted" — and
+    on a blob:none partial clone the detached checkout faults in only those
+    few root-file blobs. Idempotent: no-op when already clean at the pin."""
+    head = run_git(["rev-parse", "--verify", "--quiet", "HEAD"],
+                   cwd=sub, check=False).stdout.strip()
+    dirty = run_git(["status", "--porcelain"], cwd=sub,
+                    check=False).stdout.strip()
+    if head == sha and not dirty:
+        return
+    run_git(["sparse-checkout", "init", "--cone"], cwd=sub)
+    if head != sha:
+        # unborn or wrong HEAD: detached checkout of the pin populates the
+        # in-cone (root) files only, faulting in just those blobs.
+        run_git(["checkout", "-q", "--detach", sha], cwd=sub)
+    # `checkout --detach <sha>` is a no-op when HEAD already equals the pin,
+    # so a dirty-at-pin repo (blank/mangled index) must be repaired
+    # explicitly: rebuild the index from HEAD (offline — metadata only),
+    # re-declare the sparse absences, restore the in-cone files.
+    run_git(["reset", "-q", "--mixed", "HEAD"], cwd=sub)
+    run_git(["sparse-checkout", "reapply"], cwd=sub)
+    run_git(["checkout", "-q", "--", "."], cwd=sub)
 
 
 # ---------------------------------------------------------------------------
@@ -264,6 +295,10 @@ def materialize_wholesale(name: str, entry: dict, force: bool) -> None:
             and os.path.isdir(view_root):
         # offline up-to-date check
         if have_commit(os.path.join(REPO, entry["submodule"]), entry["pinned_sha"]):
+            # the view is current, but the submodule worktree may still need
+            # its status-clean repair (ensure_checkout is offline here)
+            ensure_checkout(os.path.join(REPO, entry["submodule"]),
+                            entry["pinned_sha"])
             print("[%s] up to date (pin %s) -- skipped (no network)"
                   % (name, entry["pinned_sha"][:12]))
             return
