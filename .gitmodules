@@ -1,0 +1,29 @@
+# wyred-klibs pinned KiCad library submodules.
+#
+# update = none is MANDATORY: a naive `git clone --recurse-submodules` must
+# never pull these trees (kicad-footprints alone is ~100s of MB, kicad-
+# packages3D is multi-GB). materialize.py initializes/fetches them explicitly
+# and pins the exact 10.0.4-train commit recorded in manifest.json.
+#
+# url = the GitLab CANONICAL library repos. See README.md "Fork provenance and
+# the stale-GitHub-mirror discrepancy": the owebeeone/klibs-* GitHub forks
+# (recorded per-library as `fork_url` in manifest.json) are the intended
+# availability pins, but the github.com/KiCad/* mirrors they were forked from
+# are frozen at KiCad 5.1.7 and cannot serve the 10.0.x objects. Until the
+# forks are re-synced from GitLab, materialize.py fetches from `upstream`
+# (GitLab). The manifest is the source of truth for the pin (commit SHA).
+
+[submodule "upstream/klibs-kicad-symbols"]
+	path = upstream/klibs-kicad-symbols
+	url = https://gitlab.com/kicad/libraries/kicad-symbols.git
+	update = none
+
+[submodule "upstream/klibs-kicad-footprints"]
+	path = upstream/klibs-kicad-footprints
+	url = https://gitlab.com/kicad/libraries/kicad-footprints.git
+	update = none
+
+[submodule "upstream/klibs-kicad-packages3D"]
+	path = upstream/klibs-kicad-packages3D
+	url = https://gitlab.com/kicad/libraries/kicad-packages3D.git
+	update = none

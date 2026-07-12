@@ -1,0 +1,86 @@
+{
+  "manifest_version": 1,
+  "kicad_train": "10.0.x",
+  "pinned_release_tag": "10.0.4",
+  "notes": [
+    "The pin is the commit SHA (pinned_sha), never the tag: tags are mutable, SHAs are the pin.",
+    "STALE-GITHUB-MIRROR DISCREPANCY (surfaced during the Rung-1 build, 2026-07-12): the",
+    "plan (WyredPlan3dRung1.md) assumed github.com/KiCad/* are current GitLab mirrors and",
+    "forked them to owebeeone/klibs-*. In fact the github.com/KiCad/{kicad-symbols,",
+    "kicad-footprints,kicad-packages3D} mirrors are FROZEN at KiCad 5.1.7 (the project moved",
+    "to GitLab ~2020). The 10.0.x train lives ONLY on gitlab.com/kicad/libraries/*. So the",
+    "owebeeone/klibs-* forks (recorded per-library as fork_url) cannot serve 10.0.x objects",
+    "until they are re-synced from GitLab. materialize.py therefore fetches from `upstream`",
+    "(GitLab canonical). fetch_order lists the URLs materialize tries, in order.",
+    "TWIN DISCREPANCY: packages3D 10.0.4 ships 7241 .step files and ZERO .wrl files (the .wrl",
+    "twins are generated at packaging time, not stored in git). The materializer fetches the",
+    ".step twin for every referenced model and confesses that the .wrl twin is absent-upstream;",
+    "it is not a fetch failure. kicad-cli --subst-models does NOT resolve a .wrl board ref from",
+    "a .step-only tree (the .wrl file must physically exist), so .wrl refs stay unresolved by",
+    "kicad-cli against a git-materialized view -- this is expected and confessed, not fixed.",
+    "SYMBOLS-LAYOUT DISCREPANCY: at 10.0.x kicad-symbols uses the split *.kicad_symdir/ layout",
+    "(per-symbol files, e.g. Device.kicad_symdir/R.kicad_sym), not monolithic Device.kicad_sym."
+  ],
+  "license_summary": "CC-BY-SA-4.0 with the KiCad libraries exception. Unmodified upstream trees; each materialized view root carries the upstream LICENSE.md.",
+  "libraries": {
+    "symbols": {
+      "kind": "symbols",
+      "materialize": "wholesale-archive",
+      "upstream": "https://gitlab.com/kicad/libraries/kicad-symbols.git",
+      "fork_url": "https://github.com/owebeeone/klibs-kicad-symbols.git",
+      "fork_status": "STALE: forked from github.com/KiCad/kicad-symbols which is frozen at 5.1.7; re-sync from upstream (GitLab) to make it a real 10.0.x availability pin.",
+      "fetch_order": ["upstream"],
+      "submodule": "upstream/klibs-kicad-symbols",
+      "pinned_tag": "10.0.4",
+      "pinned_sha": "dcd4e9e491eee9b8835b843d8ac92e8c2a7e10f8",
+      "pinned_tree": "86ef7688267387ec97f82d1e604c1df5a1152748",
+      "license": "CC-BY-SA-4.0 with KiCad libraries exception",
+      "license_file": "LICENSE.md",
+      "view_root": "symbols"
+    },
+    "footprints": {
+      "kind": "footprints",
+      "materialize": "wholesale-archive",
+      "upstream": "https://gitlab.com/kicad/libraries/kicad-footprints.git",
+      "fork_url": "https://github.com/owebeeone/klibs-kicad-footprints.git",
+      "fork_status": "STALE: forked from github.com/KiCad/kicad-footprints which is frozen at 5.1.7; re-sync from upstream (GitLab) to make it a real 10.0.x availability pin.",
+      "fetch_order": ["upstream"],
+      "submodule": "upstream/klibs-kicad-footprints",
+      "pinned_tag": "10.0.4",
+      "pinned_sha": "cb8299c2ba2baed8d76a9207b76e4884bcfc24e6",
+      "pinned_tree": "6d49aa85e7ffa09c3fafa87b1f116c893063bf9c",
+      "license": "CC-BY-SA-4.0 with KiCad libraries exception",
+      "license_file": "LICENSE.md",
+      "view_root": "footprints"
+    },
+    "packages3d": {
+      "kind": "packages3d",
+      "materialize": "sparse-blob-filter",
+      "upstream": "https://gitlab.com/kicad/libraries/kicad-packages3D.git",
+      "fork_url": "https://github.com/owebeeone/klibs-kicad-packages3D.git",
+      "fork_status": "STALE: forked from github.com/KiCad/kicad-packages3D which is frozen at 5.1.7; re-sync from upstream (GitLab) to make it a real 10.0.x availability pin.",
+      "fetch_order": ["upstream"],
+      "submodule": "upstream/klibs-kicad-packages3D",
+      "pinned_tag": "10.0.4",
+      "pinned_sha": "0bc64e922178140eb6890377646efd45e15011bd",
+      "pinned_tree": "b0b673ca976525b9144694ede2109a89f095e168",
+      "license": "CC-BY-SA-4.0 with KiCad libraries exception",
+      "license_file": "LICENSE.md",
+      "view_root": "3dmodels"
+    }
+  },
+  "resolver": {
+    "model_dir_vars": [
+      "KISYS3DMOD",
+      "KICAD5_3DMODEL_DIR",
+      "KICAD6_3DMODEL_DIR",
+      "KICAD7_3DMODEL_DIR",
+      "KICAD8_3DMODEL_DIR",
+      "KICAD9_3DMODEL_DIR",
+      "KICAD10_3DMODEL_DIR"
+    ],
+    "project_var": "KIPRJMOD",
+    "packages3d_view_root": "3dmodels",
+    "footprints_view_root": "footprints"
+  }
+}
