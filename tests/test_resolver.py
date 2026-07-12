@@ -211,8 +211,15 @@ class TestBoardMode(unittest.TestCase):
         res = R.Resolver()
         with tempfile.TemporaryDirectory() as empty, \
                 tempfile.TemporaryDirectory() as outdir:
+            # corpus-safe: kicad-cli migrates/creates project sidecars in the
+            # board's directory, so run it on a COPY, never the read-only
+            # wyred-t9y corpus. Both engines then read the same copied board
+            # (identical bytes -> identical model refs; ${KIPRJMOD} expands to
+            # the copy's dir either way).
+            board = os.path.join(outdir, os.path.basename(WATCHY))
+            shutil.copyfile(WATCHY, board)
             # resolver: refs whose exact path is absent from the empty model dir
-            out = res.board(WATCHY, model_dir=empty)
+            out = res.board(board, model_dir=empty)
             resolver_missing = {r["ref"] for r in out["records"] if not r["exists"]}
             # kicad-cli: File-not-found with every *_3DMODEL_DIR var = empty dir
             env = dict(os.environ)
@@ -223,7 +230,7 @@ class TestBoardMode(unittest.TestCase):
             step = os.path.join(outdir, "watchy.step")
             proc = subprocess.run(
                 [kcli, "pcb", "export", "step", "--subst-models", "--force",
-                 "-o", step, WATCHY], env=env, capture_output=True, text=True)
+                 "-o", step, board], env=env, capture_output=True, text=True)
             self.assertEqual(proc.returncode, 0, proc.stderr)
             kcli_missing = set()
             for line in (proc.stdout + "\n" + proc.stderr).splitlines():
